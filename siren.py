@@ -9,6 +9,7 @@ add_parameter("blade_length", 100)
 add_parameter("blade_width", 100)
 add_parameter("height", 10)
 add_parameter("blade_attack_angle", 35)
+add_parameter("slit_count", 8)
 
 def propeller(blades, blade_length, blade_width, height, hub_d, blade_thickness, hub_thickness):
   lead_width = 3
@@ -75,7 +76,13 @@ def intake_slits(height, inner_d, outer_d, count, wall_thickness):
   tip = cylinder(d=inner_d, h=height/2+eps) + [0, 0, height/2]
   return difference(union(contents, barrel), tip)
 
-#intake_slits(height=10, inner_d=10, outer_d=40, count=8, wall_thickness=2).show()
+show(intake_slits(
+  height=10,
+  inner_d=10,
+  outer_d=40,
+  count=int(slit_count),
+  wall_thickness=2
+))
 
 show(propeller(
   blades=blade_count,
@@ -84,4 +91,4 @@ show(propeller(
   height=height,
   hub_d=26,
   blade_thickness=3,
-  hub_thickness=2))
+  hub_thickness=2) + [100, 100, 0])
