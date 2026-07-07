@@ -1,12 +1,14 @@
 from openscad import *
+import math
 
-fn = 100
+fn = 200
 
 outer_radius = 24
 wall_width = 1
 outer_ring_inner_radius = outer_radius - 8
 outer_ring_height = 4.6
 outer_fixpoint_count = 13
+inner_fixpoint_count = 12
 
 eps = 0.01
 
@@ -44,47 +46,63 @@ dimples = union([
   dimple.rotate([0, 0, i * 360 / outer_fixpoint_count])
     for i in range(0, outer_fixpoint_count)])
 
-engaged_outer_groove = linear_extrude(
-  difference(
-    rotate(
-      circle(
-        r=outer_radius - 3,
-        angle=360 / outer_fixpoint_count + 2 * eps),
-        [-eps]),
-    circle(
-      r=outer_radius - 5)),
-  height=3) + [0, 0, 1]
+def twist(outer_diameter, width, height):
+  wide_angle = 1.0 / inner_fixpoint_count
+  narrow_angle = 1.0 / outer_fixpoint_count
+  outer_d = outer_diameter
+  inner_d = outer_diameter - width
+  narrow_offset = narrow_angle / 3
+  wide_offset = -1.0 / (inner_fixpoint_count * outer_fixpoint_count)
+  marker = 0.0
+  points = [
+    [0, inner_d],
+    [1 * narrow_angle - narrow_offset, inner_d],
+    [1 * narrow_angle + narrow_offset, inner_d],
+    [2 * narrow_angle - narrow_offset, inner_d],
+    [2 * narrow_angle + narrow_offset, inner_d],
+    [3 * narrow_angle - narrow_offset, inner_d],
+    [3 * narrow_angle + wide_offset, outer_d],
+    [4 * narrow_angle - wide_offset, outer_d],
+    [4 * narrow_angle + narrow_offset, inner_d],
+    [5 * narrow_angle - narrow_offset, inner_d],
+    [5 * narrow_angle + narrow_offset, inner_d],
+    [6 * narrow_angle - narrow_offset, inner_d],
+    [6 * narrow_angle + narrow_offset, inner_d],
+    [7 * narrow_angle - narrow_offset, inner_d],
+    [7 * narrow_angle + wide_offset, outer_d],
+    [8 * narrow_angle - wide_offset, outer_d],
+    [8 * narrow_angle + narrow_offset, inner_d],
+    [9 * narrow_angle - narrow_offset, inner_d],
+    [9 * narrow_angle + narrow_offset, inner_d],
+    [10 * narrow_angle - narrow_offset, inner_d],
+    [10 * narrow_angle + narrow_offset, inner_d],
+    [11 * narrow_angle - narrow_offset, inner_d],
+    [11 * narrow_angle + wide_offset, outer_d],
+    [12 * narrow_angle - wide_offset, outer_d],
+    [12 * narrow_angle + narrow_offset, inner_d],
+    [1, inner_d]
+  ]
+  def xsection(a):
+    before = None
+    after = None
+    for pair in points:
+      if pair[0] <= a:
+        before = pair
+      elif pair[0] >= a:
+        after = pair
+        break
+    w = after[0] - before[0]
+    t = (after[0] - a) / w
+    radius = before[1] * t + after[1] * (1 - t)
+    return [
+      [radius, 0],
+      [radius, height],
+      [radius - width, height],
+      [radius - width, 0]
+    ]
+  return rotate_extrude(xsection, fn=300)
 
-locked_outer_groove = linear_extrude(
-  difference(
-    rotate(
-      circle(
-        r=outer_radius - 5,
-        angle=360 / outer_fixpoint_count + 2 * eps),
-      [-eps]), 
-    circle(
-      r=outer_radius - 7)),
-  height=3) + [0, 0, 1]
-
-groove_pattern = [
-  locked_outer_groove,
-  engaged_outer_groove,
-  locked_outer_groove,
-  locked_outer_groove,
-  locked_outer_groove,
-  engaged_outer_groove,
-  locked_outer_groove,
-  locked_outer_groove,
-  locked_outer_groove,
-  locked_outer_groove,
-  engaged_outer_groove,
-  locked_outer_groove,
-  locked_outer_groove
-]
-
-grooves = union([
-  groove_pattern[i].rotate([0, 0, i * 360 / outer_fixpoint_count])
-    for i in range(0, outer_fixpoint_count)])
+grooves = twist(outer_radius - 3, 2.0, 3) + [0, 0, 1]
 
 root = union(
   difference(outer_ring_bottom, grooves, dimples),
