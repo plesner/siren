@@ -50,8 +50,8 @@ def twist(outer_diameter, width, height):
   wide_angle = 1.0 / inner_fixpoint_count
   narrow_angle = 1.0 / outer_fixpoint_count
   outer_d = outer_diameter
-  inner_d = outer_diameter - width
-  narrow_offset = narrow_angle / 3
+  inner_d = outer_diameter - width - 1
+  narrow_offset = narrow_angle / 2
   wide_offset = -1.0 / (inner_fixpoint_count * outer_fixpoint_count)
   marker = 0.0
   points = [
@@ -100,9 +100,9 @@ def twist(outer_diameter, width, height):
       [radius - width, height],
       [radius - width, 0]
     ]
-  return rotate_extrude(xsection, fn=300)
+  return rotate_extrude(xsection, fn=200).rotate([0, 0, 180.0 / outer_fixpoint_count])
 
-grooves = twist(outer_radius - 3, 2.0, 3) + [0, 0, 1]
+grooves = twist(outer_radius - 2, 2.0, 3) + [0, 0, 1]
 
 root = union(
   difference(outer_ring_bottom, grooves, dimples),
